@@ -12,7 +12,7 @@ type Element struct {
 }
 
 func (e *Element) Text() (text string, err error) {
-	// register(getHandler, new GetText("/wd/hub/session/:sessionId/element/:id/text"))
+	// register(getHandler, new GetText("/session/:sessionId/element/:id/text"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/text"); err != nil {
 		return "", err
@@ -26,7 +26,7 @@ func (e *Element) Text() (text string, err error) {
 }
 
 func (e *Element) GetAttribute(name string) (attribute string, err error) {
-	// register(getHandler, new GetElementAttribute("/wd/hub/session/:sessionId/element/:id/attribute/:name"))
+	// register(getHandler, new GetElementAttribute("/session/:sessionId/element/:id/attribute/:name"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/attribute", name); err != nil {
 		return "", err
@@ -40,7 +40,7 @@ func (e *Element) GetAttribute(name string) (attribute string, err error) {
 }
 
 func (e *Element) ContentDescription() (name string, err error) {
-	// register(getHandler, new GetName("/wd/hub/session/:sessionId/element/:id/name"))
+	// register(getHandler, new GetName("/session/:sessionId/element/:id/name"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/name"); err != nil {
 		return "", err
@@ -54,7 +54,7 @@ func (e *Element) ContentDescription() (name string, err error) {
 }
 
 func (e *Element) Size() (size Size, err error) {
-	// register(getHandler, new GetSize("/wd/hub/session/:sessionId/element/:id/size"))
+	// register(getHandler, new GetSize("/session/:sessionId/element/:id/size"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/size"); err != nil {
 		return Size{-1, -1}, err
@@ -73,7 +73,7 @@ type Rect struct {
 }
 
 func (e *Element) Rect() (rect Rect, err error) {
-	// register(getHandler, new GetRect("/wd/hub/session/:sessionId/element/:id/rect"))
+	// register(getHandler, new GetRect("/session/:sessionId/element/:id/rect"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/rect"); err != nil {
 		return Rect{}, err
@@ -88,9 +88,9 @@ func (e *Element) Rect() (rect Rect, err error) {
 
 func (e *Element) Screenshot() (raw *bytes.Buffer, err error) {
 	// W3C endpoint
-	// register(getHandler, new GetElementScreenshot("/wd/hub/session/:sessionId/element/:id/screenshot"))
+	// register(getHandler, new GetElementScreenshot("/session/:sessionId/element/:id/screenshot"))
 	// JSONWP endpoint
-	// register(getHandler, new GetElementScreenshot("/wd/hub/session/:sessionId/screenshot/:id"))
+	// register(getHandler, new GetElementScreenshot("/session/:sessionId/screenshot/:id"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/screenshot"); err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (e *Element) Screenshot() (raw *bytes.Buffer, err error) {
 }
 
 func (e *Element) Location() (point Point, err error) {
-	// register(getHandler, new Location("/wd/hub/session/:sessionId/element/:id/location"))
+	// register(getHandler, new Location("/session/:sessionId/element/:id/location"))
 	var rawResp RawResponse
 	if rawResp, err = e.parent.executeGet("/session", e.parent.sessionId, "/element", e.id, "/location"); err != nil {
 		return Point{-1, -1}, err
@@ -124,13 +124,13 @@ func (e *Element) Location() (point Point, err error) {
 }
 
 func (e *Element) Click() (err error) {
-	// register(postHandler, new Click("/wd/hub/session/:sessionId/element/:id/click"))
+	// register(postHandler, new Click("/session/:sessionId/element/:id/click"))
 	_, err = e.parent.executePost(nil, "/session", e.parent.sessionId, "/element", e.id, "/click")
 	return
 }
 
 func (e *Element) Clear() (err error) {
-	// register(postHandler, new Clear("/wd/hub/session/:sessionId/element/:id/clear"))
+	// register(postHandler, new Clear("/session/:sessionId/element/:id/clear"))
 	_, err = e.parent.executePost(nil, "/session", e.parent.sessionId, "/element", e.id, "/clear")
 	return
 }
@@ -139,7 +139,7 @@ func (e *Element) SendKeys(text string, isReplace ...bool) (err error) {
 	if len(isReplace) == 0 {
 		isReplace = []bool{true}
 	}
-	// register(postHandler, new SendKeysToElement("/wd/hub/session/:sessionId/element/:id/value"))
+	// register(postHandler, new SendKeysToElement("/session/:sessionId/element/:id/value"))
 	// https://github.com/appium/appium-uiautomator2-server/blob/master/app/src/main/java/io/appium/uiautomator2/handler/SendKeysToElement.java#L76-L85
 	data := map[string]interface{}{
 		"text":    text,
@@ -237,7 +237,7 @@ func (e *Element) ScrollTo(by BySelector, maxSwipes ...int) (err error) {
 }
 
 func (e *Element) ScrollToElement(element *Element) (err error) {
-	// register(postHandler, new ScrollToElement("/wd/hub/session/:sessionId/appium/element/:id/scroll_to/:id2"))
+	// register(postHandler, new ScrollToElement("/session/:sessionId/appium/element/:id/scroll_to/:id2"))
 	_, err = e.parent.executePost(nil, "/session", e.parent.sessionId, "/appium/element", e.id, "/scroll_to", element.id)
 	return
 }

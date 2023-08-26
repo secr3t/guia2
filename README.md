@@ -21,18 +21,14 @@ go get github.com/electricbubble/guia2
 > `appium-uiautomator2-server-debug-androidTest.apk`  
 > `appium-uiautomator2-server-vXX.XX.XX.apk`
 >
->> `apk` 可以选择通过 [appium/appium-uiautomator2-server](https://github.com/appium/appium-uiautomator2-server#building-project) 进行构建  
->> 也可以直接从这里下载 [electricbubble/appium-uiautomator2-server-apk](https://github.com/electricbubble/appium-uiautomator2-server-apk/releases)
+>> use appium-uiautomator2-server apk [appium/appium-uiautomator2-server](https://github.com/appium/appium-uiautomator2-server/releases) 进行构建  
 >  
 >
-> 再通过 `adb` 启动 `appium-uiautomator2-server`  
+> start `appium-uiautomator2-server`  
 > ```shell script
-> adb shell am instrument -w io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner
-> # ⬇️ 后台运行
 > adb shell "nohup am instrument -w io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner >/sdcard/uia2server.log 2>&1 &"
-> # or
-> adb -s $serial shell "nohup am instrument -w io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner >/sdcard/uia2server.log 2>&1 &"
 > ```
+
 
 ### `guia2.NewUSBDriver()`
 该函数使用期间, `Android` 设备必须一直保持 `USB` 的连接 (`模拟器` 也使用该函数)
@@ -175,11 +171,12 @@ func checkErr(err error, msg ...string) {
 
 ```
 
-> 感谢小伙伴提供的 `红米 Note 5A`
 
 
-![example](https://github.com/electricbubble/ImageHosting/blob/master/img/202008192034_guia2.gif)
+forked from https://github.com/electricbubble/guia2 and update to use with appium server application which version starts from 5.x.x
 
+Use this with your own risk.
+This code just updated request path, and have to update for new methods.
 
 ## Thanks
 

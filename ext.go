@@ -49,7 +49,7 @@ func NewUSBDriver(device ...Device) (driver *Driver, err error) {
 		return nil, err
 	}
 
-	rawURL := fmt.Sprintf("http://%s%d:6790/wd/hub", forwardToPrefix, localPort)
+	rawURL := fmt.Sprintf("http://%s%d:%d", forwardToPrefix, localPort, UIA2ServerPort)
 
 	if driver, err = NewDriver(NewEmptyCapabilities(), rawURL); err != nil {
 		_ = usbDevice.ForwardKill(localPort)
@@ -69,8 +69,8 @@ func NewWiFiDriver(ip string, uia2Port ...int) (driver *Driver, err error) {
 		return nil, err
 	}
 
-	// rawURL := fmt.Sprintf("http://%s:%d/wd/hub", strings.Split(ip, ":")[0], uia2Port[0])
-	rawURL := fmt.Sprintf("http://%s:%d/wd/hub", ip, uia2Port[0])
+	// rawURL := fmt.Sprintf("http://%s:%d", strings.Split(ip, ":")[0], uia2Port[0])
+	rawURL := fmt.Sprintf("http://%s:%d", ip, uia2Port[0])
 
 	var usbDevice gadb.Device
 	for i := range devices {
@@ -102,7 +102,8 @@ func (d *Driver) check() error {
 }
 
 // Dispose corresponds to the command:
-//  adb -s $serial forward --remove $localPort
+//
+//	adb -s $serial forward --remove $localPort
 func (d *Driver) Dispose() (err error) {
 	if err = d.check(); err != nil {
 		return err
@@ -419,8 +420,9 @@ func (s UiSelectorHelper) Index(index int) UiSelectorHelper {
 // 2, the `className(String)` matches the image
 // widget class, and `enabled(boolean)` is true.
 // The code would look like this:
-//  `new UiSelector().className("android.widget.ImageView")
-//    .enabled(true).instance(2);`
+//
+//	`new UiSelector().className("android.widget.ImageView")
+//	  .enabled(true).instance(2);`
 func (s UiSelectorHelper) Instance(instance int) UiSelectorHelper {
 	s.value.WriteString(fmt.Sprintf(`.instance(%d)`, instance))
 	return s

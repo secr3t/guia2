@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var uiaServerURL = "http://localhost:6790/wd/hub"
+var uiaServerURL = "https://localhost:6790"
 
 func TestDriver_NewSession(t *testing.T) {
 	SetDebug(true)

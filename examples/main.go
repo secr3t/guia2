@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/electricbubble/guia2"
+	"github.com/secr3t/guia2"
 	"io/ioutil"
 	"log"
 	"os"
