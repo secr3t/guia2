@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var AdbServerHost = "localhost"
@@ -58,6 +59,16 @@ func NewUSBDriver(device ...Device) (driver *Driver, err error) {
 	driver.usbDevice = usbDevice
 	driver.localPort = localPort
 	return
+}
+
+func LaunchUiAutomator2() (err error) {
+	var devices []Device
+	if devices, err = DeviceList(); err != nil {
+		return err
+	}
+	usbDevice := devices[0]
+	_, err = usbDevice.RunShellCommand("nohup", "am", "instrument", "-w", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner", ">/sdcard/uia2server.log", "2>&1", "&")
+	return err
 }
 
 func NewWiFiDriver(ip string, uia2Port ...int) (driver *Driver, err error) {
@@ -120,7 +131,7 @@ func (d *Driver) ActiveAppActivity() (appActivity string, err error) {
 	}
 
 	var sOutput string
-	if sOutput, err = d.usbDevice.RunShellCommand("dumpsys activity activities | grep mResumedActivity"); err != nil {
+	if sOutput, err = d.RunShellCommand("dumpsys activity activities | grep mResumedActivity"); err != nil {
 		return "", err
 	}
 	re := regexp.MustCompile(`\{(.+?)\}`)
@@ -147,7 +158,7 @@ func (d *Driver) AppLaunch(appPackageName string, waitForComplete ...BySelector)
 	}
 
 	var sOutput string
-	if sOutput, err = d.usbDevice.RunShellCommand("monkey -p", appPackageName, "-c android.intent.category.LAUNCHER 1"); err != nil {
+	if sOutput, err = d.RunShellCommand("monkey -p", appPackageName, "-c android.intent.category.LAUNCHER 1"); err != nil {
 		return err
 	}
 	if strings.Contains(sOutput, "monkey aborted") {
@@ -177,7 +188,7 @@ func (d *Driver) AppTerminate(appPackageName string) (err error) {
 		return err
 	}
 
-	_, err = d.usbDevice.RunShellCommand("am force-stop", appPackageName)
+	_, err = d.RunShellCommand("am force-stop", appPackageName)
 	return
 }
 
@@ -203,9 +214,9 @@ func (d *Driver) AppInstall(apkPath string, reinstall ...bool) (err error) {
 
 	var shellOutput string
 	if len(reinstall) != 0 && reinstall[0] {
-		shellOutput, err = d.usbDevice.RunShellCommand("pm install", "-r", remotePath)
+		shellOutput, err = d.RunShellCommand("pm install", "-r", remotePath)
 	} else {
-		shellOutput, err = d.usbDevice.RunShellCommand("pm install", remotePath)
+		shellOutput, err = d.RunShellCommand("pm install", remotePath)
 	}
 
 	if err != nil {
@@ -226,9 +237,9 @@ func (d *Driver) AppUninstall(appPackageName string, keepDataAndCache ...bool) (
 
 	var shellOutput string
 	if len(keepDataAndCache) != 0 && keepDataAndCache[0] {
-		shellOutput, err = d.usbDevice.RunShellCommand("pm uninstall", "-k", appPackageName)
+		shellOutput, err = d.RunShellCommand("pm uninstall", "-k", appPackageName)
 	} else {
-		shellOutput, err = d.usbDevice.RunShellCommand("pm uninstall", appPackageName)
+		shellOutput, err = d.RunShellCommand("pm uninstall", appPackageName)
 	}
 
 	if err != nil {
@@ -240,6 +251,18 @@ func (d *Driver) AppUninstall(appPackageName string, keepDataAndCache ...bool) (
 	}
 
 	return
+}
+
+func (d *Driver) RunShellCommand(cmd string, args ...string) (string, error) {
+	return d.usbDevice.RunShellCommand(cmd, args...)
+}
+
+func (d *Driver) GetDevice() gadb.Device {
+	return d.usbDevice
+}
+
+func (d *Driver) Push(buf []byte, remotePath string, mode ...os.FileMode) error {
+	return d.usbDevice.Push(bytes.NewBuffer(buf), remotePath, time.Now(), mode...)
 }
 
 func getFreePort() (int, error) {
