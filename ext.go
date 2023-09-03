@@ -266,7 +266,7 @@ func (d *Driver) Push(buf []byte, remotePath string, mode ...os.FileMode) error 
 }
 
 func getFreePort() (int, error) {
-	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:19999")
 	if err != nil {
 		return 0, fmt.Errorf("free port: %w", err)
 	}
