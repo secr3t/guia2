@@ -18,7 +18,7 @@ import (
 )
 
 // HTTPClient is the default client to use to communicate with the WebDriver server.
-var HTTPClient = http.DefaultClient
+var HTTPClient = &http.Client{}
 
 var DefaultWaitTimeout = time.Second * 60
 var DefaultWaitInterval = time.Millisecond * 250
