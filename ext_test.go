@@ -2,6 +2,7 @@ package guia2
 
 import (
 	"testing"
+	"time"
 )
 
 func TestUiSelectorHelper_NewUiSelectorHelper(t *testing.T) {
@@ -161,4 +162,12 @@ func TestDriver_AppUninstall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestLaunchUiAutomator2(t *testing.T) {
+	LaunchUiAutomator2()
+	time.Sleep(10 * time.Second)
+}
+func TestTerminateUIAutomator(t *testing.T) {
+	TerminateUIAutomator()
 }

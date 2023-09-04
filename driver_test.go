@@ -2,6 +2,7 @@ package guia2
 
 import (
 	"io/ioutil"
+	"net/http"
 	"testing"
 	"time"
 )
@@ -941,7 +942,7 @@ func TestDriver_ActiveElement(t *testing.T) {
 
 	SetDebug(true)
 
-	element, err := driver.ActiveElement()
+	element, err := driver.FindElement(BySelector{ResourceIdID: "com.taobao.taobao:id/searchEdit"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -951,4 +952,8 @@ func TestDriver_ActiveElement(t *testing.T) {
 	if err = element.SendKeys("test"); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestSomething(t *testing.T) {
+	t.Log(http.Get("http://127.0.0.1:54908/json/version"))
 }
