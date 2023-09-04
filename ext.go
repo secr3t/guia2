@@ -79,7 +79,14 @@ func LaunchUiAutomator2() (err error) {
 	}
 	usbDevice := devices[0]
 
-	go usbDevice.RunShellCommand("am instrument", "-w", "-e", "disableAnalytics", "true", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner")
+	result, err := usbDevice.RunShellCommand("pgrep", "-f", "io.appium.uiautomator2.server.test")
+
+	if result == "" {
+		_, err = usbDevice.RunShellCommand("su", "-c", "pkill -f uiautomator")
+		time.Sleep(time.Second)
+		go usbDevice.RunShellCommand("am instrument", "-w", "-e", "disableAnalytics", "true", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner")
+	}
+
 	return err
 }
 
