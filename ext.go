@@ -67,6 +67,8 @@ func LaunchUiAutomator2() (err error) {
 		return err
 	}
 	usbDevice := devices[0]
+
+	_, _ = usbDevice.RunShellCommand("su", "-c", "pkill -9 -ef uiautomator")
 	_, err = usbDevice.RunShellCommand("nohup", "am", "instrument", "-w", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner", ">/sdcard/uia2server.log", "2>&1", "&")
 	return err
 }
