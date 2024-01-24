@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/electricbubble/gadb"
+	"github.com/secr3t/gadb"
 	"net"
 	"os"
 	"path"
@@ -72,6 +72,17 @@ func TerminateUIAutomator() (err error) {
 	return
 }
 
+func isUIA2ServerRun() (isRun bool, err error) {
+	var devices []Device
+	if devices, err = DeviceList(); err != nil {
+		return
+	}
+	usbDevice := devices[0]
+
+	result, err := usbDevice.RunShellCommand("pgrep", "-f", "io.appium.uiautomator2.server.test")
+	return result != "", err
+}
+
 func LaunchUiAutomator2() (err error) {
 	var devices []Device
 	if devices, err = DeviceList(); err != nil {
@@ -79,12 +90,14 @@ func LaunchUiAutomator2() (err error) {
 	}
 	usbDevice := devices[0]
 
-	result, err := usbDevice.RunShellCommand("pgrep", "-f", "io.appium.uiautomator2.server.test")
+	isRun, err := isUIA2ServerRun()
 
-	if result == "" {
-		_, err = usbDevice.RunShellCommand("su", "-c", "pkill -f uiautomator")
+	if !isRun {
+		TerminateUIAutomator()
 		time.Sleep(time.Second)
-		go usbDevice.RunShellCommand("am instrument", "-w", "-e", "disableAnalytics", "true", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner")
+		usbDevice.RunShellCommand("nohup", "am", "instrument", "-w",
+			//"-e", "disableAnalytics", "true",
+			"io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner", ">/sdcard/uia2server.log", "2>&1", "&")
 	}
 
 	return err

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/electricbubble/gadb"
+	"github.com/secr3t/gadb"
 	"net/http"
 	"net/url"
 	"path"
@@ -1259,19 +1259,32 @@ func (d *Driver) _waitWithTimeoutAndInterval(condition Condition, timeout, inter
 }
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
-func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interval float64) (err error) {
-	dTimeout := time.Millisecond * time.Duration(timeout*1000)
-	dInterval := time.Millisecond * time.Duration(interval*1000)
-	return d._waitWithTimeoutAndInterval(condition, dTimeout, dInterval)
+func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interval time.Duration) (err error) {
+	timer := time.NewTimer(timeout)
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		select {
+		case <-timer.C:
+			timer.Stop()
+			ticker.Stop()
+			return errors.New("timeout")
+		case <-time.After(0):
+			if done, err := condition(d); err != nil {
+				return err
+			} else if done {
+				return nil
+			}
+		}
+	}
+	return errors.New("timeout")
 }
 
 // WaitWithTimeout works like WaitWithTimeoutAndInterval, but with default polling interval.
-func (d *Driver) WaitWithTimeout(condition Condition, timeout float64) error {
-	dTimeout := time.Millisecond * time.Duration(timeout*1000)
-	return d._waitWithTimeoutAndInterval(condition, dTimeout, DefaultWaitInterval)
+func (d *Driver) WaitWithTimeout(condition Condition, timeout time.Duration) error {
+	return d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval)
 }
 
 // Wait works like WaitWithTimeoutAndInterval, but using the default timeout and polling interval.
 func (d *Driver) Wait(condition Condition) error {
-	return d._waitWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval)
+	return d.WaitWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval)
 }

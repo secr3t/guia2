@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/electricbubble/gadb"
-	"io/ioutil"
+	"github.com/secr3t/gadb"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -79,7 +79,7 @@ func executeHTTP(method string, rawURL string, rawBody []byte) (rawResp RawRespo
 		_ = resp.Body.Close()
 	}()
 
-	rawResp, err = ioutil.ReadAll(resp.Body)
+	rawResp, err = io.ReadAll(resp.Body)
 	debugLog(fmt.Sprintf("<-- %s %s %d %s %s\n%s\n", method, rawURL, resp.StatusCode, time.Now().Sub(start), tmpForwardLog, rawResp))
 	if err != nil {
 		return nil, err

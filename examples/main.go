@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/secr3t/guia2"
-	"io/ioutil"
 	"log"
 	"os"
 )
@@ -73,7 +72,7 @@ func main() {
 	screenshot, err := element.Screenshot()
 	checkErr(err)
 	userHomeDir, _ := os.UserHomeDir()
-	checkErr(ioutil.WriteFile(userHomeDir+"/Desktop/element.png", screenshot.Bytes(), 0600))
+	checkErr(os.WriteFile(userHomeDir+"/Desktop/element.png", screenshot.Bytes(), 0600))
 
 	err = driver.PressKeyCode(guia2.KCMediaPause, guia2.KMEmpty)
 	checkErr(err)

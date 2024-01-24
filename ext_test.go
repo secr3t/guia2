@@ -164,6 +164,8 @@ func TestDriver_AppUninstall(t *testing.T) {
 }
 
 func TestLaunchUiAutomator2(t *testing.T) {
+	SetDebug(true)
+
 	LaunchUiAutomator2()
 }
 
