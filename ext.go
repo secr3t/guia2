@@ -208,7 +208,7 @@ func (d *Driver) AppLaunch(appPackageName string, waitForComplete ...BySelector)
 			}
 			return false, nil
 		}
-		if err = d.WaitWithTimeoutAndInterval(exists, 45, 1.5); err != nil {
+		if err = d.WaitWithTimeoutAndInterval(exists, 45*time.Second, 1500*time.Millisecond); err != nil {
 			return fmt.Errorf("app launch (waitForComplete): %s: %w", err.Error(), ce)
 		}
 	}
