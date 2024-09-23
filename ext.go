@@ -61,10 +61,11 @@ func NewUSBDriver(device ...Device) (driver *Driver, err error) {
 	return
 }
 
-func TerminateUIAutomator() (err error) {
-	var devices []Device
-	if devices, err = DeviceList(); err != nil {
-		return err
+func TerminateUIAutomator(devices ...Device) (err error) {
+	if len(devices) == 0 {
+		if devices, err = DeviceList(); err != nil {
+			return err
+		}
 	}
 	usbDevice := devices[0]
 
@@ -72,10 +73,11 @@ func TerminateUIAutomator() (err error) {
 	return
 }
 
-func isUIA2ServerRun() (isRun bool, err error) {
-	var devices []Device
-	if devices, err = DeviceList(); err != nil {
-		return
+func isUIA2ServerRun(devices ...Device) (isRun bool, err error) {
+	if len(devices) == 0 {
+		if devices, err = DeviceList(); err != nil {
+			return
+		}
 	}
 	usbDevice := devices[0]
 
@@ -83,21 +85,22 @@ func isUIA2ServerRun() (isRun bool, err error) {
 	return result != "", err
 }
 
-func LaunchUiAutomator2() (err error) {
-	var devices []Device
-	if devices, err = DeviceList(); err != nil {
-		return err
+func Launch(devices ...Device) (err error) {
+	if len(devices) == 0 {
+		if devices, err = DeviceList(); err != nil {
+			return err
+		}
 	}
 	usbDevice := devices[0]
 
-	isRun, err := isUIA2ServerRun()
+	isRun, err := isUIA2ServerRun(devices...)
 
 	if !isRun {
-		TerminateUIAutomator()
+		TerminateUIAutomator(devices...)
 		time.Sleep(time.Second)
 		usbDevice.RunShellCommand("nohup", "am", "instrument", "-w",
 			//"-e", "disableAnalytics", "true",
-			"io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner", ">/sdcard/uia2server.log", "2>&1", "&")
+			"io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner", "1> /dev/null 2>&1 &")
 	}
 
 	return err

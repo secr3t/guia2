@@ -11,6 +11,10 @@ type Element struct {
 	id     string
 }
 
+func (e *Element) Id() string {
+	return e.id
+}
+
 func (e *Element) Text() (text string, err error) {
 	// register(getHandler, new GetText("/session/:sessionId/element/:id/text"))
 	var rawResp RawResponse
