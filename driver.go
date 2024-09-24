@@ -1311,10 +1311,50 @@ func (d *Driver) Wait(condition Condition) error {
 	return d.WaitWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval)
 }
 
-func (d *Driver) WaitForElements(condition ElementsCondition) ([]*Element, error) {
-	return d.WaitElementsWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval)
+func (d *Driver) WaitForElement(selector BySelector) (*Element, error) {
+	condition := func(d *Driver) (bool, error) {
+		els, err := d.FindElement(selector)
+		return els != nil, err
+	}
+	if err := d.WaitWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval); err == nil {
+		return d.FindElement(selector)
+	} else {
+		return nil, err
+	}
 }
 
-func (d *Driver) WaitForElementsWithTimeout(condition ElementsCondition, timeout time.Duration) ([]*Element, error) {
-	return d.WaitElementsWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval)
+func (d *Driver) WaitForElementWithTimeout(selector BySelector, timeout time.Duration) (*Element, error) {
+	condition := func(d *Driver) (bool, error) {
+		els, err := d.FindElements(selector)
+		return els != nil, err
+	}
+	if err := d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err == nil {
+		return d.FindElement(selector)
+	} else {
+		return nil, err
+	}
+}
+
+func (d *Driver) WaitForElements(selector BySelector) ([]*Element, error) {
+	condition := func(d *Driver) (bool, error) {
+		els, err := d.FindElements(selector)
+		return els != nil, err
+	}
+	if err := d.WaitWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval); err == nil {
+		return d.FindElements(selector)
+	} else {
+		return nil, err
+	}
+}
+
+func (d *Driver) WaitForElementsWithTimeout(selector BySelector, timeout time.Duration) ([]*Element, error) {
+	condition := func(d *Driver) (bool, error) {
+		els, err := d.FindElements(selector)
+		return els != nil, err
+	}
+	if err := d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err == nil {
+		return d.FindElements(selector)
+	} else {
+		return nil, err
+	}
 }
