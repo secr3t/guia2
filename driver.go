@@ -1239,6 +1239,7 @@ func (d *Driver) ActiveElement() (elem *Element, err error) {
 }
 
 type Condition func(d *Driver) (bool, error)
+type ElementsCondition func(d *Driver) (elements []*Element, err error)
 
 func (d *Driver) _waitWithTimeoutAndInterval(condition Condition, timeout, interval time.Duration) (err error) {
 	startTime := time.Now()
@@ -1279,6 +1280,27 @@ func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interv
 	return errors.New("timeout")
 }
 
+// WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
+func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition, timeout, interval time.Duration) (els []*Element, err error) {
+	timer := time.NewTimer(timeout)
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		select {
+		case <-timer.C:
+			timer.Stop()
+			ticker.Stop()
+			return nil, errors.New("timeout")
+		case <-time.After(0):
+			if els, err = condition(d); err != nil {
+				return nil, err
+			} else if els != nil {
+				return
+			}
+		}
+	}
+	return els, errors.New("timeout")
+}
+
 // WaitWithTimeout works like WaitWithTimeoutAndInterval, but with default polling interval.
 func (d *Driver) WaitWithTimeout(condition Condition, timeout time.Duration) error {
 	return d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval)
@@ -1287,4 +1309,12 @@ func (d *Driver) WaitWithTimeout(condition Condition, timeout time.Duration) err
 // Wait works like WaitWithTimeoutAndInterval, but using the default timeout and polling interval.
 func (d *Driver) Wait(condition Condition) error {
 	return d.WaitWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval)
+}
+
+func (d *Driver) WaitForElements(condition ElementsCondition) ([]*Element, error) {
+	return d.WaitElementsWithTimeoutAndInterval(condition, DefaultWaitTimeout, DefaultWaitInterval)
+}
+
+func (d *Driver) WaitForElementsWithTimeout(condition ElementsCondition, timeout time.Duration) ([]*Element, error) {
+	return d.WaitElementsWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval)
 }
