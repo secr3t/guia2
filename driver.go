@@ -1271,7 +1271,7 @@ func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interv
 			return errors.New("timeout")
 		case <-time.After(0):
 			if done, err := condition(d); err != nil {
-				return err
+				continue
 			} else if done {
 				return nil
 			}
@@ -1292,7 +1292,7 @@ func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition,
 			return nil, errors.New("timeout")
 		case <-time.After(0):
 			if els, err = condition(d); err != nil {
-				return nil, err
+				continue
 			} else if els != nil {
 				return
 			}
