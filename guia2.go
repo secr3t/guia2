@@ -26,7 +26,7 @@ var DefaultWaitInterval = time.Millisecond * 250
 type RawResponse []byte
 
 var uia2Header = map[string]string{
-	"Content-Type": "application/json;charset=UTF-8",
+	"Content-Type": "application/json; charset=UTF-8",
 	"accept":       "application/json",
 }
 

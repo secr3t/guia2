@@ -52,13 +52,22 @@ func NewUSBDriver(device ...Device) (driver *Driver, err error) {
 
 	rawURL := fmt.Sprintf("http://%s%d:%d", forwardToPrefix, localPort, UIA2ServerPort)
 
-	if driver, err = NewDriver(NewEmptyCapabilities(), rawURL); err != nil {
-		_ = usbDevice.ForwardKill(localPort)
-		return nil, err
+	ticker := time.NewTicker(time.Second)
+	timeout := time.After(time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if driver, err = NewDriver(NewEmptyCapabilities(), rawURL); err == nil {
+				driver.usbDevice = usbDevice
+				driver.localPort = localPort
+				return
+			}
+		case <-timeout:
+			_ = usbDevice.ForwardKill(localPort)
+			return nil, errors.New("timeout")
+		}
 	}
-	driver.usbDevice = usbDevice
-	driver.localPort = localPort
-	return
 }
 
 func TerminateUIAutomator(devices ...Device) (err error) {
@@ -96,14 +105,22 @@ func Launch(devices ...Device) (err error) {
 	isRun, err := isUIA2ServerRun(devices...)
 
 	if !isRun {
-		TerminateUIAutomator(devices...)
-		time.Sleep(time.Second)
-		usbDevice.RunShellCommand("nohup", "am", "instrument", "-w",
-			//"-e", "disableAnalytics", "true",
-			"io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner", "1> /dev/null 2>&1 &")
+		go usbDevice.RunShellCommand("am instrument -w -e disableAnalytics true io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner")
 	}
 
-	return err
+	ticker := time.NewTicker(time.Second)
+	timeout := time.After(time.Minute)
+	for {
+		select {
+		case <-ticker.C:
+			if isRun, err = isUIA2ServerRun(devices...); err == nil {
+				return nil
+			}
+		case <-timeout:
+			ticker.Stop()
+			return errors.New("timed out")
+		}
+	}
 }
 
 func NewWiFiDriver(ip string, uia2Port ...int) (driver *Driver, err error) {

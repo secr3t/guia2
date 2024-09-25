@@ -913,7 +913,7 @@ func TestDriver_WaitWithTimeoutAndInterval(t *testing.T) {
 		return false, nil
 	}
 
-	err = driver.WaitWithTimeoutAndInterval(exists, 1, 0.1)
+	err = driver.WaitWithTimeoutAndInterval(exists, 1, time.Millisecond*100)
 	if err != nil {
 		t.Fatal(err)
 	}

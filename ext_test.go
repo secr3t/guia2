@@ -166,3 +166,8 @@ func TestDriver_AppUninstall(t *testing.T) {
 func TestTerminateUIAutomator(t *testing.T) {
 	TerminateUIAutomator()
 }
+
+func TestIsUia2ServerRunning(t *testing.T) {
+	Launch()
+	t.Log(isUIA2ServerRun())
+}
