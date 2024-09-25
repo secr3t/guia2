@@ -11,7 +11,7 @@ type Element struct {
 	id     string
 }
 
-func (e *Element) Id() string {
+func (e *Element) ElementId() string {
 	return e.id
 }
 
