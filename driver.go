@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/secr3t/gadb"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -94,6 +93,7 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 		if strings.HasPrefix(hostname, forwardToPrefix) {
 			localPort, _ = strconv.Atoi(strings.TrimPrefix(hostname, forwardToPrefix))
 			rawURL = strings.Replace(rawURL, hostname, "localhost", 1)
+			rawURL = strings.Replace(rawURL, fmt.Sprint(UIA2ServerPort), fmt.Sprint(localPort), 1)
 		}
 	}
 
@@ -109,14 +109,6 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 	}
 	for k, v := range uia2Header {
 		req.Header.Set(k, v)
-	}
-
-	if localPort != 0 && d.httpClient.Transport == nil {
-		var conn net.Conn
-		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
-			return nil, fmt.Errorf("adb forward: %w", err)
-		}
-		d.httpClient.Transport = newTransport(conn)
 	}
 
 	start := time.Now()
@@ -182,7 +174,8 @@ func NewDriver(capabilities Capabilities, urlPrefix string) (driver *Driver, err
 	}
 	driver = new(Driver)
 	driver.httpClient = &http.Client{
-		Timeout: time.Second * 10,
+		Timeout:   time.Second * 10,
+		Transport: newTransport(),
 	}
 	if driver.urlPrefix, err = url.Parse(urlPrefix); err != nil {
 		return nil, err
