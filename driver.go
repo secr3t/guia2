@@ -32,10 +32,12 @@ func (d *Driver) _requestURL(elem ...string) string {
 }
 
 func (d *Driver) executeGet(pathElem ...string) (rawResp RawResponse, err error) {
+	d.updateSessionIdWhenExpired()
 	return executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
 }
 
 func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
+	d.updateSessionIdWhenExpired()
 	var bsJSON []byte = nil
 	if data != nil {
 		if bsJSON, err = json.Marshal(data); err != nil {
@@ -46,7 +48,17 @@ func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawR
 }
 
 func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err error) {
+	d.updateSessionIdWhenExpired()
 	return executeHTTP(http.MethodDelete, d._requestURL(pathElem...), nil)
+}
+
+func (d *Driver) updateSessionIdWhenExpired() {
+	var err error
+	if status, statusErr := d.Status(); statusErr != nil || !status {
+		if d.sessionId, err = d.NewSession(NewEmptyCapabilities()); err != nil {
+			panic(err)
+		}
+	}
 }
 
 type Capabilities map[string]interface{}
