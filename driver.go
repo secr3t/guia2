@@ -1441,30 +1441,28 @@ func (d *Driver) WaitForElement(selector BySelector) (*Element, error) {
 	return d.WaitForElementWithTimeout(selector, DefaultWaitTimeout)
 }
 
-func (d *Driver) WaitForElementWithTimeout(selector BySelector, timeout time.Duration) (*Element, error) {
+func (d *Driver) WaitForElementWithTimeout(selector BySelector, timeout time.Duration) (el *Element, err error) {
 	condition := func(d *Driver) (bool, error) {
-		el, err := d.FindElement(selector)
-		return el != nil, err
+		el, err = d.FindElement(selector)
+		return el.IsDisplayed()
 	}
-	if err := d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err == nil {
-		return d.FindElement(selector)
-	} else {
+	if err = d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err != nil {
 		return nil, err
 	}
+	return
 }
 
 func (d *Driver) WaitForElements(selector BySelector) ([]*Element, error) {
 	return d.WaitForElementsWithTimeout(selector, DefaultWaitTimeout)
 }
 
-func (d *Driver) WaitForElementsWithTimeout(selector BySelector, timeout time.Duration) ([]*Element, error) {
+func (d *Driver) WaitForElementsWithTimeout(selector BySelector, timeout time.Duration) (els []*Element, err error) {
 	condition := func(d *Driver) (bool, error) {
-		els, err := d.FindElements(selector)
+		els, err = d.FindElements(selector)
 		return len(els) > 0, err
 	}
-	if err := d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err == nil {
-		return d.FindElements(selector)
-	} else {
+	if err = d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err != nil {
 		return nil, err
 	}
+	return
 }
