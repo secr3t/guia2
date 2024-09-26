@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -35,13 +34,13 @@ func (d *Driver) _requestURL(elem ...string) string {
 }
 
 func (d *Driver) executeGet(pathElem ...string) (rawResp RawResponse, err error) {
-	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
+	/*if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
 		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
 			return s == prev
 		}); prevIdx >= 0 {
 			pathElem[prevIdx] = curr
 		}
-	}
+	}*/
 	return d.executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
 }
 
@@ -50,13 +49,13 @@ func (d *Driver) executeGetForSessionDetails(pathElem ...string) (rawResp RawRes
 }
 
 func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
-	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
+	/*	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
 		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
 			return s == prev
 		}); prevIdx >= 0 {
 			pathElem[prevIdx] = curr
 		}
-	}
+	}*/
 	var bsJSON []byte = nil
 	if data != nil {
 		if bsJSON, err = json.Marshal(data); err != nil {
@@ -77,13 +76,13 @@ func (d *Driver) executePostForNewSession(data interface{}, pathElem ...string) 
 }
 
 func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err error) {
-	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
+	/*if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
 		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
 			return s == prev
 		}); prevIdx >= 0 {
 			pathElem[prevIdx] = curr
 		}
-	}
+	}*/
 	return d.executeHTTP(http.MethodDelete, d._requestURL(pathElem...), nil)
 }
 
