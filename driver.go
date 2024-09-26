@@ -1444,6 +1444,9 @@ func (d *Driver) WaitForElement(selector BySelector) (*Element, error) {
 func (d *Driver) WaitForElementWithTimeout(selector BySelector, timeout time.Duration) (el *Element, err error) {
 	condition := func(d *Driver) (bool, error) {
 		el, err = d.FindElement(selector)
+		if el == nil {
+			return false, nil
+		}
 		return el.IsDisplayed()
 	}
 	if err = d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err != nil {
