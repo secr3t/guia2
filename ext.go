@@ -2,10 +2,12 @@ package guia2
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/secr3t/gadb"
 	"net"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -672,4 +674,29 @@ func (s UiSelectorHelper) ContainerSelector(selector UiSelectorHelper) UiSelecto
 func (s UiSelectorHelper) FromParent(selector UiSelectorHelper) UiSelectorHelper {
 	s.value.WriteString(fmt.Sprintf(`.fromParent(%s)`, selector.value.String()))
 	return s
+}
+
+func newTransport(conn ...net.Conn) *http.Transport {
+	var dialContext func(ctx context.Context, network, addr string) (net.Conn, error)
+	if len(conn) == 0 {
+		dialContext = (&net.Dialer{
+			Timeout:   time.Minute / 2,
+			KeepAlive: time.Minute,
+		}).DialContext
+	} else {
+		dialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return conn[0], nil
+		}
+	}
+	return &http.Transport{
+		DialContext:            dialContext,
+		TLSHandshakeTimeout:    10 * time.Second,
+		ExpectContinueTimeout:  10 * time.Second,
+		ResponseHeaderTimeout:  10 * time.Second,
+		IdleConnTimeout:        0,
+		DisableKeepAlives:      false,
+		MaxResponseHeaderBytes: 1048576, // 1MB
+		MaxIdleConns:           1,
+		MaxIdleConnsPerHost:    1,
+	}
 }

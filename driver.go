@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/secr3t/gadb"
+	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -17,9 +19,9 @@ import (
 )
 
 type Driver struct {
-	urlPrefix *url.URL
-	sessionId string
-
+	urlPrefix  *url.URL
+	sessionId  string
+	httpClient *http.Client
 	// ext.go
 
 	usbDevice gadb.Device
@@ -40,11 +42,11 @@ func (d *Driver) executeGet(pathElem ...string) (rawResp RawResponse, err error)
 			pathElem[prevIdx] = curr
 		}
 	}
-	return executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
+	return d.executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
 }
 
 func (d *Driver) executeGetForSessionDetails(pathElem ...string) (rawResp RawResponse, err error) {
-	return executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
+	return d.executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
 }
 
 func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
@@ -61,7 +63,7 @@ func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawR
 			return nil, err
 		}
 	}
-	return executeHTTP(http.MethodPost, d._requestURL(pathElem...), bsJSON)
+	return d.executeHTTP(http.MethodPost, d._requestURL(pathElem...), bsJSON)
 }
 
 func (d *Driver) executePostForNewSession(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
@@ -71,7 +73,7 @@ func (d *Driver) executePostForNewSession(data interface{}, pathElem ...string) 
 			return nil, err
 		}
 	}
-	return executeHTTP(http.MethodPost, d._requestURL(pathElem...), bsJSON)
+	return d.executeHTTP(http.MethodPost, d._requestURL(pathElem...), bsJSON)
 }
 
 func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err error) {
@@ -82,7 +84,77 @@ func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err err
 			pathElem[prevIdx] = curr
 		}
 	}
-	return executeHTTP(http.MethodDelete, d._requestURL(pathElem...), nil)
+	return d.executeHTTP(http.MethodDelete, d._requestURL(pathElem...), nil)
+}
+
+func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawResp RawResponse, err error) {
+	var localPort int
+	{
+		tmpURL, _ := url.Parse(rawURL)
+		hostname := tmpURL.Hostname()
+		if strings.HasPrefix(hostname, forwardToPrefix) {
+			localPort, _ = strconv.Atoi(strings.TrimPrefix(hostname, forwardToPrefix))
+			rawURL = strings.Replace(rawURL, hostname, "localhost", 1)
+		}
+	}
+
+	tmpForwardLog := "\b"
+	if localPort != 0 {
+		tmpForwardLog = fmt.Sprintf("localPort=%d", localPort)
+	}
+	debugLog(fmt.Sprintf("--> %s %s %s\n%s", method, rawURL, tmpForwardLog, rawBody))
+
+	var req *http.Request
+	if req, err = http.NewRequest(method, rawURL, bytes.NewBuffer(rawBody)); err != nil {
+		return
+	}
+	for k, v := range uia2Header {
+		req.Header.Set(k, v)
+	}
+
+	if localPort != 0 {
+		var conn net.Conn
+		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
+			return nil, fmt.Errorf("adb forward: %w", err)
+		}
+		d.httpClient.Transport = newTransport(conn)
+	}
+
+	start := time.Now()
+	var resp *http.Response
+	if resp, err = d.httpClient.Do(req); err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	rawResp, err = io.ReadAll(resp.Body)
+	debugLog(fmt.Sprintf("<-- %s %s %d %s %s\n%s\n", method, rawURL, resp.StatusCode, time.Now().Sub(start), tmpForwardLog, rawResp))
+	if err != nil {
+		return nil, err
+	}
+
+	var reply = new(struct {
+		Value struct {
+			Err        string `json:"error"`
+			Message    string `json:"message"`
+			Stacktrace string `json:"stacktrace"`
+		}
+	})
+	if err = json.Unmarshal(rawResp, reply); err != nil {
+		if resp.StatusCode == http.StatusOK {
+			// 如果遇到 value 直接是 字符串，则报错，但是 http 状态是 200
+			// {"sessionId":"b4f2745a-be74-4cb3-8f4c-881cde817a8d","value":"YWJjZDEyMw==\n"}
+			return rawResp, nil
+		}
+		return nil, err
+	}
+	if reply.Value.Err != "" {
+		return nil, fmt.Errorf("%s: %s", reply.Value.Err, reply.Value.Message)
+	}
+
+	return
 }
 
 func (d *Driver) updateSessionIdWhenExpired() (prev, curr string) {
@@ -109,6 +181,10 @@ func NewDriver(capabilities Capabilities, urlPrefix string) (driver *Driver, err
 		capabilities = NewEmptyCapabilities()
 	}
 	driver = new(Driver)
+	driver.httpClient = &http.Client{
+		Timeout:   time.Second * 10,
+		Transport: newTransport(),
+	}
 	if driver.urlPrefix, err = url.Parse(urlPrefix); err != nil {
 		return nil, err
 	}

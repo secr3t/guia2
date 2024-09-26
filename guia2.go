@@ -1,24 +1,11 @@
 package guia2
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/secr3t/gadb"
-	"io"
 	"log"
-	"net"
-	"net/http"
-	"net/url"
 	"reflect"
-	"strconv"
-	"strings"
 	"time"
 )
-
-// HTTPClient is the default client to use to communicate with the WebDriver server.
-var HTTPClient = &http.Client{}
 
 var DefaultWaitTimeout = time.Second * 60
 var DefaultWaitInterval = time.Millisecond * 250
@@ -30,82 +17,82 @@ var uia2Header = map[string]string{
 	"accept":       "application/json",
 }
 
-func executeHTTP(method string, rawURL string, rawBody []byte) (rawResp RawResponse, err error) {
-	var localPort int
-	{
-		tmpURL, _ := url.Parse(rawURL)
-		hostname := tmpURL.Hostname()
-		if strings.HasPrefix(hostname, forwardToPrefix) {
-			localPort, _ = strconv.Atoi(strings.TrimPrefix(hostname, forwardToPrefix))
-			rawURL = strings.Replace(rawURL, hostname, "localhost", 1)
-		}
-	}
-
-	tmpForwardLog := "\b"
-	if localPort != 0 {
-		tmpForwardLog = fmt.Sprintf("localPort=%d", localPort)
-	}
-	debugLog(fmt.Sprintf("--> %s %s %s\n%s", method, rawURL, tmpForwardLog, rawBody))
-
-	var req *http.Request
-	if req, err = http.NewRequest(method, rawURL, bytes.NewBuffer(rawBody)); err != nil {
-		return
-	}
-	for k, v := range uia2Header {
-		req.Header.Set(k, v)
-	}
-
-	tmpHTTPClient := HTTPClient
-
-	if localPort != 0 {
-		var conn net.Conn
-		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
-			return nil, fmt.Errorf("adb forward: %w", err)
-		}
-		tmpHTTPClient.Transport = &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return conn, nil
-			},
-		}
-		defer func() { _ = conn.Close() }()
-	}
-
-	start := time.Now()
-	var resp *http.Response
-	if resp, err = tmpHTTPClient.Do(req); err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	rawResp, err = io.ReadAll(resp.Body)
-	debugLog(fmt.Sprintf("<-- %s %s %d %s %s\n%s\n", method, rawURL, resp.StatusCode, time.Now().Sub(start), tmpForwardLog, rawResp))
-	if err != nil {
-		return nil, err
-	}
-
-	var reply = new(struct {
-		Value struct {
-			Err        string `json:"error"`
-			Message    string `json:"message"`
-			Stacktrace string `json:"stacktrace"`
-		}
-	})
-	if err = json.Unmarshal(rawResp, reply); err != nil {
-		if resp.StatusCode == http.StatusOK {
-			// 如果遇到 value 直接是 字符串，则报错，但是 http 状态是 200
-			// {"sessionId":"b4f2745a-be74-4cb3-8f4c-881cde817a8d","value":"YWJjZDEyMw==\n"}
-			return rawResp, nil
-		}
-		return nil, err
-	}
-	if reply.Value.Err != "" {
-		return nil, fmt.Errorf("%s: %s", reply.Value.Err, reply.Value.Message)
-	}
-
-	return
-}
+//func executeHTTP(method string, rawURL string, rawBody []byte) (rawResp RawResponse, err error) {
+//	var localPort int
+//	{
+//		tmpURL, _ := url.Parse(rawURL)
+//		hostname := tmpURL.Hostname()
+//		if strings.HasPrefix(hostname, forwardToPrefix) {
+//			localPort, _ = strconv.Atoi(strings.TrimPrefix(hostname, forwardToPrefix))
+//			rawURL = strings.Replace(rawURL, hostname, "localhost", 1)
+//		}
+//	}
+//
+//	tmpForwardLog := "\b"
+//	if localPort != 0 {
+//		tmpForwardLog = fmt.Sprintf("localPort=%d", localPort)
+//	}
+//	debugLog(fmt.Sprintf("--> %s %s %s\n%s", method, rawURL, tmpForwardLog, rawBody))
+//
+//	var req *http.Request
+//	if req, err = http.NewRequest(method, rawURL, bytes.NewBuffer(rawBody)); err != nil {
+//		return
+//	}
+//	for k, v := range uia2Header {
+//		req.Header.Set(k, v)
+//	}
+//
+//	tmpHTTPClient := HTTPClient
+//
+//	if localPort != 0 {
+//		var conn net.Conn
+//		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
+//			return nil, fmt.Errorf("adb forward: %w", err)
+//		}
+//		tmpHTTPClient.Transport = &http.Transport{
+//			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+//				return conn, nil
+//			},
+//		}
+//		defer func() { _ = conn.Close() }()
+//	}
+//
+//	start := time.Now()
+//	var resp *http.Response
+//	if resp, err = tmpHTTPClient.Do(req); err != nil {
+//		return nil, err
+//	}
+//	defer func() {
+//		_ = resp.Body.Close()
+//	}()
+//
+//	rawResp, err = io.ReadAll(resp.Body)
+//	debugLog(fmt.Sprintf("<-- %s %s %d %s %s\n%s\n", method, rawURL, resp.StatusCode, time.Now().Sub(start), tmpForwardLog, rawResp))
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	var reply = new(struct {
+//		Value struct {
+//			Err        string `json:"error"`
+//			Message    string `json:"message"`
+//			Stacktrace string `json:"stacktrace"`
+//		}
+//	})
+//	if err = json.Unmarshal(rawResp, reply); err != nil {
+//		if resp.StatusCode == http.StatusOK {
+//			// 如果遇到 value 直接是 字符串，则报错，但是 http 状态是 200
+//			// {"sessionId":"b4f2745a-be74-4cb3-8f4c-881cde817a8d","value":"YWJjZDEyMw==\n"}
+//			return rawResp, nil
+//		}
+//		return nil, err
+//	}
+//	if reply.Value.Err != "" {
+//		return nil, fmt.Errorf("%s: %s", reply.Value.Err, reply.Value.Message)
+//	}
+//
+//	return
+//}
 
 const (
 	// legacyWebElementIdentifier is the string constant used in the old
