@@ -841,7 +841,7 @@ func (d *Driver) Flick(xSpeed, ySpeed int) (err error) {
 }
 
 func (d *Driver) _scrollTo(method, selector string, maxSwipes int, elementID ...string) (err error) {
-	// register(postHandler, new ScrollTo("/session/:sessionId/touch/scroll"))
+	// register(postHandler, new ScrollTo("/session/:sessionId/gestures/scroll_to"))
 	params := map[string]interface{}{
 		"strategy": method,
 		"selector": selector,
@@ -856,7 +856,7 @@ func (d *Driver) _scrollTo(method, selector string, maxSwipes int, elementID ...
 			webElementIdentifier:       elementID[0],
 		}
 	}
-	_, err = d.executePost(data, "/session", d.sessionId, "touch/scroll")
+	_, err = d.executePost(data, "/session", d.sessionId, "gestures/scroll_to")
 	return
 }
 
