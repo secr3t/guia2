@@ -107,12 +107,11 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 	if req, err = http.NewRequest(method, rawURL, bytes.NewBuffer(rawBody)); err != nil {
 		return
 	}
-	req.Close = true
 	for k, v := range uia2Header {
 		req.Header.Set(k, v)
 	}
 
-	if localPort != 0 {
+	if localPort != 0 && d.httpClient.Transport == nil {
 		var conn net.Conn
 		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
 			return nil, fmt.Errorf("adb forward: %w", err)
@@ -183,8 +182,7 @@ func NewDriver(capabilities Capabilities, urlPrefix string) (driver *Driver, err
 	}
 	driver = new(Driver)
 	driver.httpClient = &http.Client{
-		Timeout:   time.Second * 10,
-		Transport: newTransport(),
+		Timeout: time.Second * 10,
 	}
 	if driver.urlPrefix, err = url.Parse(urlPrefix); err != nil {
 		return nil, err
@@ -199,7 +197,7 @@ func (d *Driver) NewSession(capabilities Capabilities) (sessionID string, err er
 	// register(postHandler, new NewSession("/session"))
 	var rawResp RawResponse
 	data := map[string]interface{}{"capabilities": capabilities}
-	if rawResp, err = d.executePostForNewSession(data, "/session"); err != nil {
+	if rawResp, err = d.executePost(data, "/session"); err != nil {
 		return "", err
 	}
 	var reply = new(struct{ Value struct{ SessionId string } })
@@ -248,7 +246,7 @@ func (d *Driver) SessionIDs() (sessionIDs []string, err error) {
 func (d *Driver) SessionDetails() (scrollData map[string]interface{}, err error) {
 	// register(getHandler, new GetSessionDetails("/session/:sessionId"))
 	var rawResp RawResponse
-	if rawResp, err = d.executeGetForSessionDetails("/session", d.sessionId); err != nil {
+	if rawResp, err = d.executeGet("/session", d.sessionId); err != nil {
 		return nil, err
 	}
 	var reply = new(struct{ Value map[string]interface{} })
