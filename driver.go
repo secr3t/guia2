@@ -108,6 +108,7 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 	if req, err = http.NewRequest(method, rawURL, bytes.NewBuffer(rawBody)); err != nil {
 		return
 	}
+	req.Close = true
 	for k, v := range uia2Header {
 		req.Header.Set(k, v)
 	}
