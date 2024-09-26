@@ -2,3 +2,5 @@ github.com/secr3t/gadb v0.0.1 h1:W5LTzloRYrBH9fjGZiBQGQ7TFbAMrToy/n5MZ8Wvlkc=
 github.com/secr3t/gadb v0.0.1/go.mod h1:0qzfjDuGv10ArbgFy/iZSY2adIvyLMgAjIXpFPv+Q+U=
 github.com/secr3t/gadb v0.0.4 h1:DAwXynyXiVZinEFkb8b9rvpm8At9Xy9j+om08QNm5Lc=
 github.com/secr3t/gadb v0.0.4/go.mod h1:0qzfjDuGv10ArbgFy/iZSY2adIvyLMgAjIXpFPv+Q+U=
+github.com/secr3t/gadb v0.1.0 h1:IPbWRMaKfHrew+5Tgpu5q078z2s/rTHDzmnUXVWUmSA=
+github.com/secr3t/gadb v0.1.0/go.mod h1:0qzfjDuGv10ArbgFy/iZSY2adIvyLMgAjIXpFPv+Q+U=
