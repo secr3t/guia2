@@ -43,6 +43,10 @@ func (d *Driver) executeGet(pathElem ...string) (rawResp RawResponse, err error)
 	return executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
 }
 
+func (d *Driver) executeGetForSessionDetails(pathElem ...string) (rawResp RawResponse, err error) {
+	return executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
+}
+
 func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
 	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
 		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
@@ -84,7 +88,7 @@ func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err err
 func (d *Driver) updateSessionIdWhenExpired() (prev, curr string) {
 	prev = d.sessionId
 	var err error
-	if status, statusErr := d.Status(); statusErr != nil || !status {
+	if _, sessionErr := d.SessionDetails(); sessionErr != nil {
 		if d.sessionId, err = d.NewSession(NewEmptyCapabilities()); err != nil {
 			curr = d.sessionId
 			panic(err)
@@ -167,7 +171,7 @@ func (d *Driver) SessionIDs() (sessionIDs []string, err error) {
 func (d *Driver) SessionDetails() (scrollData map[string]interface{}, err error) {
 	// register(getHandler, new GetSessionDetails("/session/:sessionId"))
 	var rawResp RawResponse
-	if rawResp, err = d.executeGet("/session", d.sessionId); err != nil {
+	if rawResp, err = d.executeGetForSessionDetails("/session", d.sessionId); err != nil {
 		return nil, err
 	}
 	var reply = new(struct{ Value map[string]interface{} })
