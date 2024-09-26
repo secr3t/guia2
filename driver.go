@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -32,12 +33,34 @@ func (d *Driver) _requestURL(elem ...string) string {
 }
 
 func (d *Driver) executeGet(pathElem ...string) (rawResp RawResponse, err error) {
-	d.updateSessionIdWhenExpired()
+	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
+		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
+			return s == prev
+		}); prevIdx >= 0 {
+			pathElem[prevIdx] = curr
+		}
+	}
 	return executeHTTP(http.MethodGet, d._requestURL(pathElem...), nil)
 }
 
 func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
-	d.updateSessionIdWhenExpired()
+	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
+		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
+			return s == prev
+		}); prevIdx >= 0 {
+			pathElem[prevIdx] = curr
+		}
+	}
+	var bsJSON []byte = nil
+	if data != nil {
+		if bsJSON, err = json.Marshal(data); err != nil {
+			return nil, err
+		}
+	}
+	return executeHTTP(http.MethodPost, d._requestURL(pathElem...), bsJSON)
+}
+
+func (d *Driver) executePostForNewSession(data interface{}, pathElem ...string) (rawResp RawResponse, err error) {
 	var bsJSON []byte = nil
 	if data != nil {
 		if bsJSON, err = json.Marshal(data); err != nil {
@@ -48,17 +71,27 @@ func (d *Driver) executePost(data interface{}, pathElem ...string) (rawResp RawR
 }
 
 func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err error) {
-	d.updateSessionIdWhenExpired()
+	if prev, curr := d.updateSessionIdWhenExpired(); prev != curr {
+		if prevIdx := slices.IndexFunc(pathElem, func(s string) bool {
+			return s == prev
+		}); prevIdx >= 0 {
+			pathElem[prevIdx] = curr
+		}
+	}
 	return executeHTTP(http.MethodDelete, d._requestURL(pathElem...), nil)
 }
 
-func (d *Driver) updateSessionIdWhenExpired() {
+func (d *Driver) updateSessionIdWhenExpired() (prev, curr string) {
+	prev = d.sessionId
 	var err error
 	if status, statusErr := d.Status(); statusErr != nil || !status {
 		if d.sessionId, err = d.NewSession(NewEmptyCapabilities()); err != nil {
+			curr = d.sessionId
 			panic(err)
 		}
 	}
+
+	return
 }
 
 type Capabilities map[string]interface{}
@@ -85,7 +118,7 @@ func (d *Driver) NewSession(capabilities Capabilities) (sessionID string, err er
 	// register(postHandler, new NewSession("/session"))
 	var rawResp RawResponse
 	data := map[string]interface{}{"capabilities": capabilities}
-	if rawResp, err = d.executePost(data, "/session"); err != nil {
+	if rawResp, err = d.executePostForNewSession(data, "/session"); err != nil {
 		return "", err
 	}
 	var reply = new(struct{ Value struct{ SessionId string } })
