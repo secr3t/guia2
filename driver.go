@@ -160,6 +160,7 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 
 func (d *Driver) updateSessionIdWhenExpired() (prev, curr string) {
 	prev = d.sessionId
+	curr = d.sessionId
 	var err error
 	if _, sessionErr := d.SessionDetails(); sessionErr != nil {
 		if d.sessionId, err = d.NewSession(NewEmptyCapabilities()); err != nil {
