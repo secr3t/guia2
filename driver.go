@@ -591,8 +591,8 @@ func (d *Driver) TapPointF(point PointF) (err error) {
 }
 
 func (d *Driver) _swipe(startX, startY, endX, endY interface{}, steps int, elementID ...string) (err error) {
-	// register(postHandler, new Swipe("/session/:sessionId/touch/perform"))
-	data := map[string]interface{}{
+	// register(postHandler, new Swipe("/session/:sessionId/touch/perform")) deprecated
+	/*data := map[string]interface{}{
 		"startX": startX,
 		"startY": startY,
 		"endX":   endX,
@@ -603,7 +603,11 @@ func (d *Driver) _swipe(startX, startY, endX, endY interface{}, steps int, eleme
 		data["elementId"] = elementID[0]
 	}
 	_, err = d.executePost(data, "/session", d.sessionId, "touch/perform")
-	return
+	return*/
+	swipeAction := NewW3CAction(ATPointer, NewW3CGestures().PointerMoveTo(startX.(float64), startY.(float64)).
+		PointerDown().PointerMoveTo(endX.(float64), endY.(float64), float64(steps*50)).PointerUp())
+
+	return d.PerformW3CActions(swipeAction)
 }
 
 // Swipe performs a swipe from one coordinate to another using the number of steps
