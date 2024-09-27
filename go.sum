@@ -6,3 +6,5 @@ github.com/secr3t/gadb v0.1.0 h1:IPbWRMaKfHrew+5Tgpu5q078z2s/rTHDzmnUXVWUmSA=
 github.com/secr3t/gadb v0.1.0/go.mod h1:0qzfjDuGv10ArbgFy/iZSY2adIvyLMgAjIXpFPv+Q+U=
 github.com/secr3t/gadb v0.1.2 h1:yuZAzjCxV/xWz3B1nyV9Rw/NvW1Lfq1MPJ1kAGTsto0=
 github.com/secr3t/gadb v0.1.2/go.mod h1:0qzfjDuGv10ArbgFy/iZSY2adIvyLMgAjIXpFPv+Q+U=
+github.com/secr3t/gadb v0.1.3 h1:QhHqksWiVnIidimRP1/T8Lc96z0nXRV3x9lMJIjWwgU=
+github.com/secr3t/gadb v0.1.3/go.mod h1:0qzfjDuGv10ArbgFy/iZSY2adIvyLMgAjIXpFPv+Q+U=
