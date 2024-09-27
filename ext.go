@@ -109,16 +109,14 @@ func Launch(devices ...Device) (err error) {
 	isRun, err := isUIA2ServerRun(devices...)
 
 	if !isRun {
-		go func() {
-			name := "adb"
-			switch runtime.GOOS {
-			case "linux":
-			case "windows":
-				name = "adb/adb.exe"
-			case "darwin":
-			}
-			exec.Command(name, "-s", usbDevice.Serial(), "shell", "am", "instrument", "-w", "-e", "disableAnalytics", "true", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner").Run()
-		}()
+		name := "adb"
+		switch runtime.GOOS {
+		case "linux":
+		case "windows":
+			name = "adb/adb.exe"
+		case "darwin":
+		}
+		exec.Command(name, "-s", usbDevice.Serial(), "shell", "am", "instrument", "-w", "-e", "disableAnalytics", "true", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner").Start()
 	}
 
 	ticker := time.NewTicker(time.Second)
