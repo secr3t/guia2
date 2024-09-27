@@ -92,7 +92,7 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 		hostname := tmpURL.Hostname()
 		if strings.HasPrefix(hostname, forwardToPrefix) {
 			localPort, _ = strconv.Atoi(strings.TrimPrefix(hostname, forwardToPrefix))
-			rawURL = strings.Replace(rawURL, hostname, "localhost", 1)
+			rawURL = strings.Replace(rawURL, hostname, "127.0.0.1", 1)
 			rawURL = strings.Replace(rawURL, fmt.Sprint(UIA2ServerPort), fmt.Sprint(localPort), 1)
 		}
 	}
