@@ -706,8 +706,8 @@ func newTransport(conn ...net.Conn) *http.Transport {
 		IdleConnTimeout:        0,
 		DisableKeepAlives:      true,
 		MaxResponseHeaderBytes: 1048576, // 1MB
-		MaxIdleConns:           1,
-		MaxIdleConnsPerHost:    1,
-		MaxConnsPerHost:        1,
+		MaxIdleConns:           5,
+		MaxIdleConnsPerHost:    5,
+		MaxConnsPerHost:        10,
 	}
 }
