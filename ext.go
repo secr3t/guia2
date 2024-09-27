@@ -82,7 +82,7 @@ func TerminateUIAutomator(devices ...Device) (err error) {
 	}
 	usbDevice := devices[0]
 
-	_, err = usbDevice.RunShellCommand("su", "-c", "pkill -f uiautomator")
+	_, err = usbDevice.RunShellCommand("am force-stop io.appium.uiautomator2.server")
 	return
 }
 
@@ -130,6 +130,43 @@ func Launch(devices ...Device) (err error) {
 		case <-timeout:
 			ticker.Stop()
 			return errors.New("timed out")
+		}
+	}
+}
+
+func LaunchNew(devices ...Device) (driver *Driver, err error) {
+	if len(devices) == 0 {
+		if devices, err = DeviceList(); err != nil {
+			return nil, err
+		}
+	}
+	usbDevice := devices[0]
+
+	isRun, err := isUIA2ServerRun(devices...)
+	if isRun {
+		TerminateUIAutomator(devices...)
+	}
+
+	name := "adb"
+	switch runtime.GOOS {
+	case "linux":
+	case "windows":
+		name = "adb/adb.exe"
+	case "darwin":
+	}
+	exec.Command(name, "-s", usbDevice.Serial(), "shell", "am", "instrument", "-w", "-e", "disableAnalytics", "true", "io.appium.uiautomator2.server.test/androidx.test.runner.AndroidJUnitRunner").Start()
+
+	ticker := time.NewTicker(time.Second)
+	timeout := time.After(time.Minute)
+	for {
+		select {
+		case <-ticker.C:
+			if isRun, err = isUIA2ServerRun(devices...); err == nil {
+				return NewUSBDriver(devices...)
+			}
+		case <-timeout:
+			ticker.Stop()
+			return nil, errors.New("timed out")
 		}
 	}
 }
