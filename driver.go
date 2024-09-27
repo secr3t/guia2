@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/secr3t/gadb"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -111,6 +112,14 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 		req.Header.Set(k, v)
 	}
 
+	if localPort != 0 {
+		var conn net.Conn
+		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
+			return nil, fmt.Errorf("adb forward: %w", err)
+		}
+		d.httpClient.Transport = newTransport(conn)
+	}
+
 	start := time.Now()
 	var resp *http.Response
 	if resp, err = d.httpClient.Do(req); err != nil {
@@ -135,8 +144,6 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 	})
 	if err = json.Unmarshal(rawResp, reply); err != nil {
 		if resp.StatusCode == http.StatusOK {
-			// 如果遇到 value 直接是 字符串，则报错，但是 http 状态是 200
-			// {"sessionId":"b4f2745a-be74-4cb3-8f4c-881cde817a8d","value":"YWJjZDEyMw==\n"}
 			return rawResp, nil
 		}
 		return nil, err
