@@ -605,7 +605,7 @@ func (d *Driver) _swipe(startX, startY, endX, endY interface{}, steps int, eleme
 	_, err = d.executePost(data, "/session", d.sessionId, "touch/perform")
 	return*/
 	swipeAction := NewW3CAction(ATPointer, NewW3CGestures().PointerMoveTo(startX.(float64), startY.(float64)).
-		PointerDown().PointerMoveTo(endX.(float64), endY.(float64), float64(steps*50)).PointerUp())
+		PointerDown().PointerMoveTo(endX.(float64), endY.(float64), float64(steps)*0.05).PointerUp())
 
 	return d.PerformW3CActions(swipeAction)
 }
