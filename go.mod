@@ -1,7 +1,5 @@
 module github.com/secr3t/guia2
 
-go 1.21
+go 1.23.1
 
-toolchain go1.21.0
-
-require github.com/secr3t/gadb v0.1.3
+require github.com/secr3t/gadb v0.1.4
