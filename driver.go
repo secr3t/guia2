@@ -960,7 +960,7 @@ func (g w3cGesture) pointerMove(x, y float64, origin string, duration float64, p
 		g._set("size", pressureAndSize[1])
 	}
 	return g._set("type", "pointerMove").
-		_set("duration", duration).
+		_set("duration", int(duration)).
 		_set("origin", origin).
 		_set("x", x).
 		_set("y", y)
