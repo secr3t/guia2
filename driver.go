@@ -189,7 +189,7 @@ func NewDriver(capabilities Capabilities, urlPrefix string, port int) (driver *D
 	driver = new(Driver)
 	driver.localPort = port
 	driver.httpClient = &http.Client{
-		Timeout:   time.Second * 10,
+		Timeout:   2 * time.Minute,
 		Transport: newTransport(),
 	}
 	if driver.urlPrefix, err = url.Parse(urlPrefix); err != nil {
