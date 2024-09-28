@@ -62,9 +62,8 @@ func NewUSBDriver(device ...Device) (driver *Driver, err error) {
 	for {
 		select {
 		case <-ticker.C:
-			if driver, err = NewDriver(NewEmptyCapabilities(), rawURL); err == nil {
+			if driver, err = NewDriver(NewEmptyCapabilities(), rawURL, localPort); err == nil {
 				driver.usbDevice = usbDevice
-				driver.localPort = localPort
 				return
 			}
 		case <-timeout:
@@ -198,7 +197,7 @@ func NewWiFiDriver(ip string, uia2Port ...int) (driver *Driver, err error) {
 	if usbDevice.Serial() == "" {
 		return nil, errors.New("no matching and online device found")
 	}
-	if driver, err = NewDriver(NewEmptyCapabilities(), rawURL); err != nil {
+	if driver, err = NewDriver(NewEmptyCapabilities(), rawURL, 0); err != nil {
 		return nil, err
 	}
 	driver.usbDevice = usbDevice

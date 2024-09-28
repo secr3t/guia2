@@ -182,11 +182,12 @@ func NewEmptyCapabilities() Capabilities {
 	return make(Capabilities)
 }
 
-func NewDriver(capabilities Capabilities, urlPrefix string) (driver *Driver, err error) {
+func NewDriver(capabilities Capabilities, urlPrefix string, port int) (driver *Driver, err error) {
 	if capabilities == nil {
 		capabilities = NewEmptyCapabilities()
 	}
 	driver = new(Driver)
+	driver.localPort = port
 	driver.httpClient = &http.Client{
 		Timeout:   time.Second * 10,
 		Transport: newTransport(),
