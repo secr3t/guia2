@@ -2,6 +2,7 @@ package guia2
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -87,20 +88,18 @@ func (d *Driver) executeDelete(pathElem ...string) (rawResp RawResponse, err err
 }
 
 func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawResp RawResponse, err error) {
-	var localPort int
 	{
 		tmpURL, _ := url.Parse(rawURL)
 		hostname := tmpURL.Hostname()
 		if strings.HasPrefix(hostname, forwardToPrefix) {
-			localPort, _ = strconv.Atoi(strings.TrimPrefix(hostname, forwardToPrefix))
 			rawURL = strings.Replace(rawURL, hostname, "127.0.0.1", 1)
-			rawURL = strings.Replace(rawURL, fmt.Sprint(UIA2ServerPort), fmt.Sprint(localPort), 1)
+			rawURL = strings.Replace(rawURL, fmt.Sprint(UIA2ServerPort), fmt.Sprint(d.localPort), 1)
 		}
 	}
 
 	tmpForwardLog := "\b"
-	if localPort != 0 {
-		tmpForwardLog = fmt.Sprintf("localPort=%d", localPort)
+	if d.localPort != 0 {
+		tmpForwardLog = fmt.Sprintf("localPort=%d", d.localPort)
 	}
 	debugLog(fmt.Sprintf("--> %s %s %s\n%s", method, rawURL, tmpForwardLog, rawBody))
 
@@ -112,17 +111,25 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 		req.Header.Set(k, v)
 	}
 
-	if localPort != 0 {
+	if d.localPort != 0 {
 		var conn net.Conn
-		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", localPort)); err != nil {
+		if conn, err = net.Dial("tcp", fmt.Sprintf(":%d", d.localPort)); err != nil {
 			return nil, fmt.Errorf("adb forward: %w", err)
 		}
-		d.httpClient.Transport = newTransport(conn)
+		d.httpClient.Transport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return conn, nil
+		}
 	}
 
 	start := time.Now()
 	var resp *http.Response
 	if resp, err = d.httpClient.Do(req); err != nil {
+		if strings.Contains(err.Error(), "the target machine actively refused it") {
+			if d.localPort, err = getFreePort(); err == nil {
+				d.usbDevice.Forward(d.localPort, UIA2ServerPort)
+				d.sessionId, _ = d.NewSession(NewEmptyCapabilities())
+			}
+		}
 		return nil, err
 	}
 	defer func() {
@@ -1455,6 +1462,23 @@ func (d *Driver) WaitForElementWithTimeout(selector BySelector, timeout time.Dur
 		return nil, err
 	}
 	return
+}
+
+func NewWaitElementFunc(selector BySelector) func(*Driver) (bool, error) {
+	return func(d *Driver) (bool, error) {
+		el, err := d.FindElement(selector)
+		if el == nil {
+			return false, err
+		}
+		return el.IsDisplayed()
+	}
+}
+
+func NewWaitElementsFunc(selector BySelector) func(*Driver) (bool, error) {
+	return func(d *Driver) (bool, error) {
+		els, err := d.FindElements(selector)
+		return len(els) > 0, err
+	}
 }
 
 func (d *Driver) WaitForElements(selector BySelector) ([]*Element, error) {

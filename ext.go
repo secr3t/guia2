@@ -270,13 +270,13 @@ func (d *Driver) AppLaunch(appPackageName string, waitForComplete ...BySelector)
 		exists := func(_d *Driver) (bool, error) {
 			for i := range waitForComplete {
 				_, ce = _d.FindElement(waitForComplete[i])
-				if ce == nil {
-					return true, nil
+				if ce != nil {
+					return false, nil
 				}
 			}
-			return false, nil
+			return true, nil
 		}
-		if err = d.WaitWithTimeoutAndInterval(exists, 45*time.Second, 1500*time.Millisecond); err != nil {
+		if err = d.Wait(exists); err != nil {
 			return fmt.Errorf("app launch (waitForComplete): %s: %w", err.Error(), ce)
 		}
 	}
@@ -737,7 +737,7 @@ func newTransport(conn ...net.Conn) *http.Transport {
 		DialContext:            dialContext,
 		TLSHandshakeTimeout:    10 * time.Second,
 		ExpectContinueTimeout:  10 * time.Second,
-		ResponseHeaderTimeout:  10 * time.Second,
+		ResponseHeaderTimeout:  2 * time.Minute,
 		IdleConnTimeout:        0,
 		DisableKeepAlives:      true,
 		MaxResponseHeaderBytes: 1048576, // 1MB
