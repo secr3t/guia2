@@ -788,6 +788,23 @@ func (d *Driver) TouchDown(x, y int) (err error) {
 	return
 }
 
+func (d *Driver) Click(x, y int) (err error) {
+	// register(postHandler, new TouchDown("/session/:sessionId/appium/gestures/click"))
+	data := map[string]interface{}{
+		"params": map[string]interface{}{
+			"offset": struct {
+				X int `json:"x"`
+				Y int `json:"y"`
+			}{
+				X: x,
+				Y: y,
+			},
+		},
+	}
+	_, err = d.executePost(data, "/session", d.sessionId, "appium/gestures/click")
+	return
+}
+
 func (d *Driver) TouchDownPoint(point Point) error {
 	return d.TouchDown(point.X, point.Y)
 }
