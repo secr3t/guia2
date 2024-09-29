@@ -1417,6 +1417,25 @@ func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interv
 }
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
+func (d *Driver) WaitWithContextAndInterval(condition Condition, ctx context.Context, interval time.Duration) (err error) {
+	ticker := time.NewTicker(interval)
+	for range ticker.C {
+		select {
+		case <-ctx.Done():
+			ticker.Stop()
+			return errors.New("cancelled")
+		case <-time.After(0):
+			if done, err := condition(d); err != nil {
+				continue
+			} else if done {
+				return nil
+			}
+		}
+	}
+	return errors.New("cancelled")
+}
+
+// WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
 func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition, timeout, interval time.Duration) (els []*Element, err error) {
 	timer := time.NewTimer(timeout)
 	ticker := time.NewTicker(interval)
@@ -1460,6 +1479,20 @@ func (d *Driver) WaitForElementWithTimeout(selector BySelector, timeout time.Dur
 		return el.IsDisplayed()
 	}
 	if err = d.WaitWithTimeoutAndInterval(condition, timeout, DefaultWaitInterval); err != nil {
+		return nil, err
+	}
+	return
+}
+
+func (d *Driver) WaitForElementWithContext(selector BySelector, ctx context.Context) (el *Element, err error) {
+	condition := func(d *Driver) (bool, error) {
+		el, err = d.FindElement(selector)
+		if el == nil {
+			return false, nil
+		}
+		return el.IsDisplayed()
+	}
+	if err = d.WaitWithContextAndInterval(condition, ctx, DefaultWaitInterval); err != nil {
 		return nil, err
 	}
 	return
