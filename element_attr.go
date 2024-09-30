@@ -87,7 +87,12 @@ func (e *Element) Selected() (bool, error) {
 }
 
 func (e *Element) IsDisplayed() (bool, error) {
-	return e.booleanAttr(attrDisplayed)
+	if isDisplayed, _ := e.booleanAttr(attrDisplayed); isDisplayed {
+		rect, _ := e.Rect()
+		return rect.Width > 1 && rect.Height > 1, nil
+	}
+
+	return false, nil
 }
 
 func (e *Element) CanClick() bool {
