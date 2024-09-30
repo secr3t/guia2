@@ -1414,12 +1414,11 @@ func (d *Driver) _waitWithTimeoutAndInterval(condition Condition, timeout, inter
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
 func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interval time.Duration) (err error) {
-	timer := time.NewTimer(timeout)
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
 		select {
-		case <-timer.C:
-			timer.Stop()
+		case <-ctx.Done():
 			ticker.Stop()
 			return errors.New("timeout")
 		case <-time.After(0):
@@ -1454,12 +1453,11 @@ func (d *Driver) WaitWithContextAndInterval(condition Condition, ctx context.Con
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
 func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition, timeout, interval time.Duration) (els []*Element, err error) {
-	timer := time.NewTimer(timeout)
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
 		select {
-		case <-timer.C:
-			timer.Stop()
+		case <-ctx.Done():
 			ticker.Stop()
 			return nil, errors.New("timeout")
 		case <-time.After(0):
