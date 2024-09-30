@@ -1415,21 +1415,7 @@ func (d *Driver) _waitWithTimeoutAndInterval(condition Condition, timeout, inter
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
 func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interval time.Duration) (err error) {
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	ticker := time.NewTicker(interval)
-	for range ticker.C {
-		select {
-		case <-ctx.Done():
-			ticker.Stop()
-			return errors.New("timeout")
-		case <-time.After(0):
-			if done, err := condition(d); err != nil {
-				continue
-			} else if done {
-				return nil
-			}
-		}
-	}
-	return errors.New("timeout")
+	return d.WaitWithContextAndInterval(condition, ctx, interval)
 }
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
@@ -1452,7 +1438,7 @@ func (d *Driver) WaitWithContextAndInterval(condition Condition, ctx context.Con
 }
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
-func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition, timeout, interval time.Duration) (els []*Element, err error) {
+/*func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition, timeout, interval time.Duration) (els []*Element, err error) {
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	ticker := time.NewTicker(interval)
 	for range ticker.C {
@@ -1469,7 +1455,7 @@ func (d *Driver) WaitElementsWithTimeoutAndInterval(condition ElementsCondition,
 		}
 	}
 	return els, errors.New("timeout")
-}
+}*/
 
 // WaitWithTimeout works like WaitWithTimeoutAndInterval, but with default polling interval.
 func (d *Driver) WaitWithTimeout(condition Condition, timeout time.Duration) error {
