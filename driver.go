@@ -24,7 +24,7 @@ type Driver struct {
 	httpClient *http.Client
 	// ext.go
 
-	usbDevice gadb.Device
+	gadb.Device
 	localPort int
 }
 
@@ -126,7 +126,7 @@ func (d *Driver) executeHTTP(method string, rawURL string, rawBody []byte) (rawR
 	if resp, err = d.httpClient.Do(req); err != nil {
 		if strings.Contains(err.Error(), "the target machine actively refused it") {
 			if d.localPort, err = getFreePort(); err == nil {
-				d.usbDevice.Forward(d.localPort, UIA2ServerPort)
+				d.Forward(d.localPort, UIA2ServerPort)
 				d.sessionId, _ = d.NewSession(NewEmptyCapabilities())
 			}
 		}

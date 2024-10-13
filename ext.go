@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -63,7 +64,7 @@ func NewUSBDriver(device ...Device) (driver *Driver, err error) {
 		select {
 		case <-ticker.C:
 			if driver, err = NewDriver(NewEmptyCapabilities(), rawURL, localPort); err == nil {
-				driver.usbDevice = usbDevice
+				driver.Device = usbDevice
 				return
 			}
 		case <-timeout:
@@ -200,12 +201,12 @@ func NewWiFiDriver(ip string, uia2Port ...int) (driver *Driver, err error) {
 	if driver, err = NewDriver(NewEmptyCapabilities(), rawURL, 0); err != nil {
 		return nil, err
 	}
-	driver.usbDevice = usbDevice
+	driver.Device = usbDevice
 	return
 }
 
 func (d *Driver) check() error {
-	if d.usbDevice.Serial() == "" {
+	if d.Serial() == "" {
 		return errors.New("adb daemon: the device is not ready")
 	}
 	return nil
@@ -221,7 +222,7 @@ func (d *Driver) Dispose() (err error) {
 	if d.localPort == 0 {
 		return nil
 	}
-	return d.usbDevice.ForwardKill(d.localPort)
+	return d.ForwardKill(d.localPort)
 }
 
 func (d *Driver) ActiveAppActivity() (appActivity string, err error) {
@@ -249,6 +250,31 @@ func (d *Driver) ActiveAppPackageName() (appPackageName string, err error) {
 	}
 	appPackageName = strings.Split(activity, "/")[0]
 	return
+}
+
+// ActivateApp  TODO: (WIP) clone appium-adb's code
+func (d *Driver) ActivateApp(appId string, waitForCompletes ...BySelector) (err error) {
+	var (
+		apiLevel int
+	)
+	if apiLevel, err = d.GetApiLevel(); err != nil {
+		return err
+	}
+
+	if apiLevel < 24 {
+		return d.AppLaunch(appId, waitForCompletes...)
+	}
+
+	return nil
+}
+
+func (d *Driver) GetApiLevel() (apiLevel int, err error) {
+	var shellResult string
+	if shellResult, err = d.RunShellCommand("getprop", "ro.build.version.sdk"); err != nil {
+		return 0, err
+	}
+
+	return strconv.Atoi(shellResult)
 }
 
 func (d *Driver) AppLaunch(appPackageName string, waitForComplete ...BySelector) (err error) {
@@ -307,7 +333,7 @@ func (d *Driver) AppInstall(apkPath string, reinstall ...bool) (err error) {
 	}
 
 	remotePath := path.Join(DeviceTempPath, apkName)
-	if err = d.usbDevice.PushFile(apkFile, remotePath); err != nil {
+	if err = d.PushFile(apkFile, remotePath); err != nil {
 		return fmt.Errorf("apk push: %w", err)
 	}
 
@@ -352,16 +378,8 @@ func (d *Driver) AppUninstall(appPackageName string, keepDataAndCache ...bool) (
 	return
 }
 
-func (d *Driver) RunShellCommand(cmd string, args ...string) (string, error) {
-	return d.usbDevice.RunShellCommand(cmd, args...)
-}
-
 func (d *Driver) GetDevice() gadb.Device {
-	return d.usbDevice
-}
-
-func (d *Driver) Push(buf []byte, remotePath string, mode ...os.FileMode) error {
-	return d.usbDevice.Push(bytes.NewBuffer(buf), remotePath, time.Now(), mode...)
+	return d.Device
 }
 
 func getFreePort() (int, error) {
