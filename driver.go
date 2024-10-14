@@ -789,20 +789,10 @@ func (d *Driver) TouchDown(x, y int) (err error) {
 }
 
 func (d *Driver) Click(x, y int) (err error) {
-	// register(postHandler, new TouchDown("/session/:sessionId/appium/gestures/click"))
-	data := map[string]interface{}{
-		"params": map[string]interface{}{
-			"offset": struct {
-				X int `json:"x"`
-				Y int `json:"y"`
-			}{
-				X: x,
-				Y: y,
-			},
-		},
-	}
-	_, err = d.executePost(data, "/session", d.sessionId, "appium/gestures/click")
-	return
+	touchAction := NewW3CAction(ATPointer, NewW3CGestures().PointerMoveTo(float64(x), float64(y)).
+		PointerDown().PointerUp())
+
+	return d.PerformW3CActions(touchAction)
 }
 
 func (d *Driver) TouchDownPoint(point Point) error {
