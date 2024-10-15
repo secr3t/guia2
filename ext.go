@@ -94,8 +94,10 @@ func isUIA2ServerRun(devices ...Device) (isRun bool, err error) {
 	}
 	usbDevice := devices[0]
 
-	result, err := usbDevice.RunShellCommand("pgrep", "-f", "io.appium.uiautomator2.server.test")
-	return result != "", err
+	//ps -A | grep io.appium.uiautomator2.server | wc -l
+	//result, err := usbDevice.RunShellCommand("pgrep", "-f", "io.appium.uiautomator2.server.test")
+	result, err := usbDevice.RunShellCommand("ps -A | grep io.appium.uiautomator2.server | wc -l")
+	return strings.TrimSpace(result) == "1", err
 }
 
 func Launch(devices ...Device) (err error) {
