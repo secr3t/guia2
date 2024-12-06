@@ -1214,6 +1214,24 @@ func (d *Driver) SetClipboard(contentType ClipDataType, content string, label ..
 	return
 }
 
+func (d *Driver) SetClipboardText(content string) (err error) {
+	lbl := content
+
+	const defaultLabelLen = 10
+	if len(lbl) > defaultLabelLen {
+		lbl = lbl[:defaultLabelLen]
+	}
+
+	data := map[string]interface{}{
+		"contentType": ClipDataTypePlaintext,
+		"label":       lbl,
+		"content":     base64.StdEncoding.EncodeToString([]byte(content)),
+	}
+	// register(postHandler, new SetClipboard("/session/:sessionId/appium/device/set_clipboard"))
+	_, err = d.executePost(data, "/session", d.sessionId, "appium/device/set_clipboard")
+	return
+}
+
 func (d *Driver) AlertAccept(buttonLabel ...string) (err error) {
 	data := map[string]interface{}{
 		"buttonLabel": nil,
@@ -1408,23 +1426,22 @@ func (d *Driver) WaitWithTimeoutAndInterval(condition Condition, timeout, interv
 	return d.WaitWithContextAndInterval(condition, ctx, interval)
 }
 
-// WaitWithTimeoutAndInterval waits for the condition to evaluate to true.
+// WaitWithContextAndInterval waits for the condition to evaluate to true.
 func (d *Driver) WaitWithContextAndInterval(condition Condition, ctx context.Context, interval time.Duration) (err error) {
-	ticker := time.NewTicker(interval)
-	for range ticker.C {
+	var done bool
+	for {
+		start := time.Now()
 		select {
 		case <-ctx.Done():
-			ticker.Stop()
-			return errors.New("cancelled")
-		case <-time.After(0):
-			if done, err := condition(d); err != nil {
-				continue
-			} else if done {
+			return errors.New("timeout exceeded")
+		default:
+			if done, err = condition(d); done {
 				return nil
+			} else {
+				time.Sleep(interval - time.Since(start))
 			}
 		}
 	}
-	return errors.New("cancelled")
 }
 
 // WaitWithTimeoutAndInterval waits for the condition to evaluate to true.

@@ -8,7 +8,7 @@ import (
 )
 
 var DefaultWaitTimeout = time.Second * 60
-var DefaultWaitInterval = time.Second / 2
+var DefaultWaitInterval = time.Second / 4
 
 type RawResponse []byte
 
