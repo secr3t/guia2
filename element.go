@@ -133,6 +133,19 @@ func (e *Element) Click() (err error) {
 	return
 }
 
+func (e *Element) RandomClick() (err error) {
+	// register(postHandler, new Click("/session/:sessionId/element/:id/click"))
+	var rect Rect
+	if rect, err = e.Rect(); err != nil {
+		return err
+	}
+
+	pointX := rect.X + RandomInt(rect.Width)
+	pointY := rect.Y + RandomInt(rect.Height)
+
+	return e.parent.Click(pointX, pointY)
+}
+
 func (e *Element) Clear() (err error) {
 	// register(postHandler, new Clear("/session/:sessionId/element/:id/clear"))
 	_, err = e.parent.executePost(nil, "/session", e.parent.sessionId, "/element", e.id, "/clear")
