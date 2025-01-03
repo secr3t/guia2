@@ -140,8 +140,10 @@ func (e *Element) RandomClick() (err error) {
 		return err
 	}
 
-	pointX := rect.X + RandomInt(rect.Width)
-	pointY := rect.Y + RandomInt(rect.Height)
+	quarterWidth := int(float64(rect.Width) * 0.25)
+	quarterHeight := int(float64(rect.Height) * 0.25)
+	pointX := rect.X + quarterWidth + RandomInt(quarterWidth)
+	pointY := rect.Y + quarterHeight + RandomInt(quarterHeight)
 
 	return e.parent.Click(pointX, pointY)
 }
